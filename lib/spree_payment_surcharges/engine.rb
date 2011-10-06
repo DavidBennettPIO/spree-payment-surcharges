@@ -15,5 +15,15 @@ module SpreePaymentSurcharge
     end
 
     config.to_prepare &method(:activate).to_proc
+    
+    initializer "spree.payment_surcharges.register.promotion.calculators" do |app|
+      app.config.spree.calculators.add_class('payment_surcharges_create_adjustments')
+      app.config.spree.calculators.payment_surcharges_create_adjustments = [
+        Calculator::FlatPercentItemTotal,
+        Calculator::FlatRate,
+        Calculator::FlatPercentPayable
+      ]
+    end
+    
   end
 end
