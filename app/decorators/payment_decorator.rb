@@ -16,11 +16,7 @@ Payment.class_eval do
   end
   
   def line_items
-    if order.complete? and Spree::Config[:track_inventory_levels]
-      order.line_items.select {|li| inventory_units.map(&:variant_id).include?(li.variant_id)}
-    else
-      order.line_items
-    end
+    order.line_items
   end
   
   def ensure_correct_adjustment
