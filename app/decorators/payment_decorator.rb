@@ -6,6 +6,8 @@ Payment.class_eval do
   
   before_save :delete_orphened_adjustment
   
+  after_save :update_order_again
+  
  
   #validates :calculator, :presence => true
   
@@ -39,7 +41,21 @@ Payment.class_eval do
       puts a
     end
     
-    
+  end
+  
+  def update_order_again
+    order.payments.reload
+    order.update!
+    order.payments.reload
+    order.update!
+    order.payments.reload
+    order.update!
+    order.payments.reload
+    order.update!
+    order.payments.reload
+    order.update!
+    order.payments.reload
+    order.update!
   end
   
 end
