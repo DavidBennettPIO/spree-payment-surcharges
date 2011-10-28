@@ -7,12 +7,24 @@ class Calculator::FlatPercentPayable < Calculator
 
   def self.register
     super
-    # The decorator has not added calculated_adjustments yet
-    # PaymentMethod.register_calculator(self)
   end
 
   def compute(object)
-    return unless object.present? and object.amount.present? 
-    object.amount * (self.preferred_flat_percent_payable / 100.0)
+    return 0 unless object.present?
+    if object.class.name.split('::').last.downcase == 'order'
+      order = object
+    elsif object.order.present?
+      order = object.order
+    else
+      return 0
+    end
+    return 0 unless order.item_total.present?
+    
+    sum = order.item_total
+    order.adjustments.without_payment_surcharge.all.each do |adjustment|
+      sum += adjustment.amount
+    end
+    sum = sum * (self.preferred_flat_percent_payable / 100.0)
+    sum
   end
 end
