@@ -7,3 +7,8 @@ Deface::Override.new(:virtual_path => "users/show",
                      :name => "account_title",
                      :replace => "h1",
                      :text => '<% content_for :title do t(:my_account) end %>')
+
+Deface::Override.new(:virtual_path => "checkout/_payment",
+                   :name => "checkout_payment_price",
+                   :insert_bottom => 'div[data-hook="checkout_payment_step"] label',
+                   :partial => "checkout/payment_price")
