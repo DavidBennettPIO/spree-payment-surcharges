@@ -6,8 +6,6 @@ Payment.class_eval do
   
   before_save :delete_orphened_adjustment
   
-  after_save :update_order_again
-  
  
   #validates :calculator, :presence => true
   
@@ -27,9 +25,8 @@ Payment.class_eval do
       adjustment.originator = payment_method
       adjustment.save
     else
-      puts payment_method
       payment_method.create_adjustment(I18n.t(:payment_surcharge), order, self, true)
-      reload #ensure adjustment is present on later saves
+      reload
     end
   end
   
@@ -37,25 +34,12 @@ Payment.class_eval do
     
     real_payments = Payment.where(:order_id => order.id).all
     
-    Adjustment.where("order_id = '#{order.id}' AND originator_type = 'PaymentMethod' AND source_id NOT IN (?)", real_payments).all.each do |a|
-      puts a
-    end
+    Adjustment.where("order_id = '#{order.id}' AND originator_type = 'PaymentMethod' AND source_id NOT IN (?)", real_payments).destroy_all
+    Adjustment.where("order_id = '#{order.id}' AND originator_type = 'PaymentMethod' AND amount = 0").destroy_all
+    
+    order.payments.reload
+    order.update!
     
   end
-  
-  def update_order_again
-    order.payments.reload
-    order.update!
-    order.payments.reload
-    order.update!
-    order.payments.reload
-    order.update!
-    order.payments.reload
-    order.update!
-    order.payments.reload
-    order.update!
-    order.payments.reload
-    order.update!
-  end
-  
+
 end
