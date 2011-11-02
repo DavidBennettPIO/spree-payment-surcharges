@@ -22,7 +22,7 @@ class Calculator::FlatPercentPayable < Calculator
     
     sum = order.item_total
     if order.adjustments.present? && order.adjustments.size > 0
-      order.adjustments.without_payment_surcharge.all.each do |adjustment|
+      Adjustment.where("originator_type != 'PaymentMethod' AND order_id = '#{@order.id}'").all.each do |adjustment|
         sum += adjustment.amount
       end
     end
