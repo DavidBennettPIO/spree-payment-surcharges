@@ -21,8 +21,10 @@ class Calculator::FlatPercentPayable < Calculator
     return 0 unless order.item_total.present?
     
     sum = order.item_total
-    order.adjustments.without_payment_surcharge.all.each do |adjustment|
-      sum += adjustment.amount
+    if order.adjustments.present? && order.adjustments.size > 0
+      order.adjustments.without_payment_surcharge.all.each do |adjustment|
+        sum += adjustment.amount
+      end
     end
     sum = sum * (self.preferred_flat_percent_payable / 100.0)
     sum
