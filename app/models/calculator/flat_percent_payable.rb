@@ -19,14 +19,12 @@ class Calculator::FlatPercentPayable < Calculator
       return 0
     end
     return 0 unless order.item_total.present?
+
+    item_total = order.item_total
+    adjustment_total = order.adjustments.without_payment_surcharge.map(&:amount).sum
     
-    sum = order.item_total
-    if order.adjustments.present? && order.adjustments.size > 0
-      Adjustment.where("originator_type != 'PaymentMethod' AND order_id = '#{order.id}'").all.each do |adjustment|
-        sum += adjustment.amount
-      end
-    end
-    sum = sum * (self.preferred_flat_percent_payable / 100.0)
-    sum
+    payable_total = item_total + adjustment_total
+
+    payable_total * (self.preferred_flat_percent_payable / 100.0)
   end
 end

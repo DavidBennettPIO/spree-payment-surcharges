@@ -8,3 +8,8 @@ tmp
 nbproject
 *.swp
 spec/dummy
+/app/assets/javascripts/admin/spree_payment_surcharges.js
+/app/assets/javascripts/store/spree_payment_surcharges.js
+/app/assets/stylesheets/admin/spree_payment_surcharges.css
+/app/assets/stylesheets/store/spree_payment_surcharges.css
+/Gemfile.lock
