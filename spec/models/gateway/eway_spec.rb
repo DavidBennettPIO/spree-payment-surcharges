@@ -21,7 +21,7 @@ describe Gateway::Eway do
     
     before(:each) do
 
-      @gateway = Factory(:gateway_eway_payable)
+      @gateway = Factory(:eway_payable_payment_method)
       @gateway.save!
   
       @country = Factory(:country, :name => "Australia", :iso_name => "AUSTRALIA", :iso3 => "AUS", :iso => "AU", :numcode => 36)

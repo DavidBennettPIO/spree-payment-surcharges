@@ -3,7 +3,7 @@ source 'http://rubygems.org'
 gem 'spree', :git => 'git://github.com/spree/spree.git', :branch => '0-70-stable'
 
 group :test do
-  gem 'rspec-rails', '= 2.6.1'
+  gem 'rspec-rails'
   gem 'sqlite3'
   gem 'factory_girl_rails', '= 1.3.0'
   gem 'rcov'

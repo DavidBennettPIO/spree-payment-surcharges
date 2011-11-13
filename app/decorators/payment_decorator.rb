@@ -23,8 +23,12 @@ Payment.class_eval do
   def ensure_correct_adjustment
     delete_orphened_adjustment
     if adjustment
-      adjustment.originator = payment_method
-      adjustment.save
+      if will_cost > 0
+        adjustment.originator = payment_method
+        adjustment.save
+      else
+        adjustment.destroy
+      end
     else
       payment_method.create_adjustment(I18n.t(:payment_surcharge), order, self, true) unless will_cost == 0
       order.update!
@@ -32,8 +36,8 @@ Payment.class_eval do
   end
   
   def delete_orphened_adjustment
-    real_payments = order.payments.where("state != 'failed'").all
-    to_kill = order.adjustments.payment_surcharge.where("source_id NOT IN (?)", real_payments).all
+    real_payments = order.payments.where("state != ?", 'failed').all
+    to_kill = order.adjustments.payment.where("source_id NOT IN (?)", real_payments).all
     if to_kill.size > 0
       to_kill.destroy_all
       order.update!

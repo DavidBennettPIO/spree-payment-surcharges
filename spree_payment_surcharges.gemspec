@@ -10,11 +10,11 @@ Gem::Specification.new do |s|
   s.email             = 'davidbennett@bravevision.com'
 
   #s.files         = `git ls-files`.split("\n")
-  #s.test_files    = `git ls-files -- {test,spec,features}/*`.split("\n")
+  #s.test_files    = `git ls-files -- {spec}/*`.split("\n")
   s.require_path = 'lib'
   s.requirements << 'none'
 
-  s.add_dependency('spree_core', '>= 0.70.0')
+  s.add_dependency 'spree_core', '>= 0.70.0'
   s.add_development_dependency 'rspec-rails'
 end
 

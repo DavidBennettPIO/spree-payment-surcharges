@@ -19,7 +19,7 @@ class Calculator::FlatPercentPayable < Calculator
 
     return 0 unless order.item_total.present?
 
-    adjustment_total = order.adjustments.without_payment_surcharge.map(&:amount).sum
+    adjustment_total = order.adjustments.eligible.map(&:amount).sum - order.payment_surcharge_total
     
     payable_total = order.item_total + adjustment_total - order.payment_total
 
