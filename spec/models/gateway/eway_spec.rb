@@ -50,10 +50,10 @@ describe Gateway::Eway do
 
     context "purchase" do
       
-      before {
+      before(:all) do
         Spree::Config.set :auto_capture => true
         @gateway.save
-      }
+      end
     
       it "should be able to send a test purchase to eWay for $10 inc surcharge" do
         
