@@ -3,6 +3,7 @@ Payment.class_eval do
   has_one :adjustment, :as => :source, :dependent => :destroy
   
   after_save :ensure_correct_adjustment, :update_order
+  after_create :ensure_correct_adjustment # Create it ASACP
   
   before_save :delete_orphened_adjustment
   
@@ -37,7 +38,7 @@ Payment.class_eval do
   
   def delete_orphened_adjustment
     real_payments = order.payments.where("state != ?", 'failed').all
-    to_kill = order.adjustments.payment.where("source_id NOT IN (?)", real_payments).all
+    to_kill = order.adjustments.payment.where("source_id NOT IN (?) OR amount = ?", real_payments, 0.0).all
     if to_kill.size > 0
       to_kill.destroy_all
       order.update!
