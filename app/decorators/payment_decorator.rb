@@ -37,8 +37,9 @@ Payment.class_eval do
   end
   
   def delete_orphened_adjustment
-    real_payments = order.payments.where("state != ?", 'failed').all
-    to_kill = order.adjustments.payment.where("source_id NOT IN (?) OR amount = ?", real_payments, 0.0)
+    # Something creates a heap of bad adjustments ??
+    aid = adjustment.id.nil? ? 0 : adjustment.id
+    to_kill = order.adjustments.payment.where("id != ? OR amount < ?", aid, 0.01)
     if to_kill.size > 0
       to_kill.destroy_all
       order.update!
