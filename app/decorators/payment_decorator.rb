@@ -2,11 +2,10 @@ Payment.class_eval do
   
   has_one :adjustment, :as => :source, :dependent => :destroy
   
-  after_save :ensure_correct_adjustment, :update_order
+  before_create :delete_orphened_adjustments
+  
   after_create :ensure_correct_adjustment # Create it ASACP
-  
-  before_save :delete_orphened_adjustment
-  
+
   # The adjustment amount associated with this payment (if any.)  Returns only the first adjustment to match
   # the payment but there should never really be more than one.
   def cost
@@ -21,28 +20,73 @@ Payment.class_eval do
     order.line_items
   end
   
-  def ensure_correct_adjustment
-    delete_orphened_adjustment
-    if adjustment
-      if will_cost > 0
-        adjustment.originator = payment_method
-        adjustment.save
-      else
-        adjustment.destroy
-      end
-    else
-      payment_method.create_adjustment(I18n.t(:payment_surcharge), order, self, true) unless will_cost == 0
-      order.update!
+  def process!
+    ensure_correct_adjustment # do this before the payment
+    if !processing? and source and source.respond_to?(:process!)
+      started_processing!
+      source.process!(self)
     end
+    reload # Get rid of the number etc
   end
   
-  def delete_orphened_adjustment
-    # Something creates a heap of bad adjustments ??
-    aid = adjustment.id.nil? ? 0 : adjustment.id
-    to_kill = order.adjustments.payment.where("id != ? OR amount < ?", aid, 0.01)
-    if to_kill.size > 0
-      to_kill.destroy_all
+  def ensure_correct_adjustment
+
+    return if ['complete', 'void', 'failed'].include?(state) # Dont change the surcharge once its paid.
+    
+    save
+
+    delete_bad_adjustments
+
+    a = find_adjustment
+
+    if !a.nil?
+      if will_cost > 0
+        a.originator = payment_method
+        a.source_id = id if !id.nil? && id > 0 && a.source_id != id # created before it's saved
+        a.save
+        update_order
+      else
+        a.destroy
+      end
+    elsif will_cost > 0
+      payment_method.create_adjustment(I18n.t(:payment_surcharge), order, self, true)
+    end
+
+    #update_order # adjustment create/destroy does this already
+    
+  end
+  
+  # Something creates a heap of bad adjustments... sometimes
+  def delete_bad_adjustments
+    
+    order.adjustments.payment.where("amount < ?", 0.01).destroy_all
+
+    a = find_adjustment
+    aid = a.nil? ? 0 : a.id
+    if !id.nil? && id > 0 && aid > 0 # saved so remove any bad adjustments 
+      order.adjustments.payment.where("source_id = ? AND id != ?", id, aid).destroy_all
+    end
+
+  end
+  
+  # If the user changes there payment method or theres a failed payment...
+  # we should remove the adjustments (:as => :source, :dependent => :destroy dont work sometimes...)
+  def delete_orphened_adjustments
+    order.adjustments.payment.where("source_id NOT IN (?)", order.payments.completed).destroy_all
+  end
+  
+  
+  # adjustment dosnt attach its self until it's saved... sometimes
+  def find_adjustment
+    return adjustment if !adjustment.nil?
+    a = order.adjustments.payment.where("source_id = ?", id).first
+    return a.nil? ? nil : a
+  end
+  
+  private
+    # I need to save so I can create the adjustment... but reload kills the number etc
+    def update_order
       order.update!
     end
-  end
+  
 end

@@ -63,6 +63,7 @@ describe Payment do
       payment.adjustment = Factory(:adjustment, :originator => payment_method, :amount => 10, :order => order)
       payment.adjustment.should_receive(:originator=).with(payment_method)
       payment.adjustment.should_receive(:save)
+      payment.stub :will_cost => 2.49
       payment.send(:ensure_correct_adjustment)
     end
   end
@@ -76,7 +77,6 @@ describe Payment do
 
   context "after_save" do
     it "should run correct callbacks" do
-      payment.should_receive(:ensure_correct_adjustment)
       payment.should_receive(:update_order)
       payment.run_callbacks(:save, :after)
     end
