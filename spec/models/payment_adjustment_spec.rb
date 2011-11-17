@@ -50,12 +50,16 @@ describe Payment do
     }
 
     it "should create adjustment when not present and has surcharge" do
+      payment.stub :adjustment => nil
+      payment.stub :find_adjustment => nil
       payment_method.should_receive(:create_adjustment).with(I18n.t(:payment_surcharge), order, payment, true)
       payment.send(:ensure_correct_adjustment)
     end
     
     it "should not create adjustment when not present and does not have surcharge" do
-      free_payment_method.should_not_receive(:create_adjustment).with(I18n.t(:payment_surcharge), free_order, payment, true)
+      free_payment.stub :adjustment => nil
+      free_payment.stub :find_adjustment => nil
+      free_payment_method.should_not_receive(:create_adjustment).with(I18n.t(:payment_surcharge), free_order, free_payment, true)
       free_payment.send(:ensure_correct_adjustment)
     end
 

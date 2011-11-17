@@ -36,6 +36,8 @@ Payment.class_eval do
     save
 
     delete_bad_adjustments
+    
+    update_order
 
     a = find_adjustment
 
@@ -44,15 +46,16 @@ Payment.class_eval do
         a.originator = payment_method
         a.source_id = id if !id.nil? && id > 0 && a.source_id != id # created before it's saved
         a.save
-        update_order
       else
         a.destroy
       end
     elsif will_cost > 0
-      payment_method.create_adjustment(I18n.t(:payment_surcharge), order, self, true)
+      adjustment = payment_method.create_adjustment(I18n.t(:payment_surcharge), order, self, true)
+      adjustment.save unless adjustment.nil?
+      save # to make sure have have the adjustment attached from our calculator
     end
 
-    #update_order # adjustment create/destroy does this already
+    update_order # adjustment create/destroy *should* have does this already...
     
   end
   
@@ -80,7 +83,8 @@ Payment.class_eval do
   def find_adjustment
     return adjustment if !adjustment.nil?
     a = order.adjustments.payment.where("source_id = ?", id).first
-    return a.nil? ? nil : a
+    adjustment = a unless a.nil?
+    return adjustment
   end
   
   private
