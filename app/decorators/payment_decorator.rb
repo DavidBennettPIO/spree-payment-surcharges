@@ -36,26 +36,20 @@ Payment.class_eval do
     save
 
     delete_bad_adjustments
-    
-    update_order
 
-    a = find_adjustment
-
-    if !a.nil?
+    if !self.adjustment.nil?
       if will_cost > 0
-        a.originator = payment_method
-        a.source_id = id if !id.nil? && id > 0 && a.source_id != id # created before it's saved
-        a.save
+        self.adjustment.originator = payment_method
+        self.adjustment.source_id = id if !id.nil? && id > 0 && self.adjustment.source_id != id # created before it's saved
+        self.adjustment.save
       else
-        a.destroy
+        self.adjustment.destroy
       end
     elsif will_cost > 0
-      adjustment = payment_method.create_adjustment(I18n.t(:payment_surcharge), order, self, true)
-      adjustment.save unless adjustment.nil?
+      self.adjustment = payment_method.create_adjustment(I18n.t(:payment_surcharge), order, self, true)
+      self.adjustment.save unless self.adjustment.nil?
       save # to make sure have have the adjustment attached from our calculator
     end
-
-    update_order # adjustment create/destroy *should* have does this already...
     
   end
   
@@ -64,8 +58,7 @@ Payment.class_eval do
     
     order.adjustments.payment.where("amount < ?", 0.01).destroy_all
 
-    a = find_adjustment
-    aid = a.nil? ? 0 : a.id
+    aid = self.adjustment.nil? ? 0 : self.adjustment.id
     if !id.nil? && id > 0 && aid > 0 # saved so remove any bad adjustments 
       order.adjustments.payment.where("source_id = ? AND id != ?", id, aid).destroy_all
     end
@@ -78,19 +71,11 @@ Payment.class_eval do
     order.adjustments.payment.where("source_id NOT IN (?)", order.payments.completed).destroy_all
   end
   
-  
-  # adjustment dosnt attach its self until it's saved... sometimes
-  def find_adjustment
-    return adjustment if !adjustment.nil?
-    a = order.adjustments.payment.where("source_id = ?", id).first
-    adjustment = a unless a.nil?
-    return adjustment
-  end
-  
   private
-    # I need to save so I can create the adjustment... but reload kills the number etc
+    # I need to save so I can create the adjustment... but reload kills the cc number etc
     def update_order
       order.update!
+      self.amount = order.total if self.amount != order.total && order.payment == self # this dosnt update as quick as it should.
     end
   
 end

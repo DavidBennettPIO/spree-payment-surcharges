@@ -25,7 +25,7 @@ class Calculator::FlatPercentPayable < Calculator
     end
     
     if payment.present? && payment.amount > 0 # has the payable amount
-      surcharge = payment.find_adjustment.present? ? payment.find_adjustment.amount : 0
+      surcharge = payment.adjustment.present? ? payment.adjustment.amount : 0
       return surcharge if ['complete', 'void', 'failed'].include?(payment.state) # Dont change the surcharge once its paid.
       payable_total = payment.amount - surcharge
     else
